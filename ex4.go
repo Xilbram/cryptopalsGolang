@@ -16,17 +16,17 @@ import(
 )
 
 func main(){
-	fileEscrever, err := os.Create("resultado.txt")
+	fileDecriptacao, err := os.Create("decriptacao.txt")
     if err != nil {
         log.Fatal(err)
     }
-    defer fileEscrever.Close()
+    defer fileDecriptacao.Close()
 
-	filePossiveis, err := os.Create("possiveis.txt")
+	filePossiveisResultados, err := os.Create("possiveisResultados.txt")
     if err != nil {
         log.Fatal(err)
     }
-    defer fileEscrever.Close()
+    defer filePossiveisResultados.Close()
 
 	file,err := os.Open("message.txt")
 	if err != nil{
@@ -35,68 +35,66 @@ func main(){
 	defer file.Close()
 	
 	byteHolder := []uint8{}
-	var xorByte uint8
-	count := 0
-	commonWords := []string{"the", "and", "is", "in", "it", "to"}
+	countLinhas := 0
 
+	//Iterar linha a linha do arquivo
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan(){
 		message := scanner.Text()
 		hexMessage := utils.StringToHex(message)
-		var texto string
+		var textoEncontrado string
 		var key byte
 		maxScore := math.Inf(-1)
 
+		//Iterar todos bytes como possiveis candidatos, realizar xor entre mensagem e byte, avaliar score
 		for n := 0; n < 255; n++{
-			numAsByte := byte(n)
-
 			for _,char := range hexMessage{
-				for j := 7; j >= 0 ; j--{
-					bit1 := (numAsByte >> uint(j)) & 1
-					bit2 := (char >> uint(j)) & 1
-	
-					xorResult := (bit1 != bit2)
-					var xorNum float64; if xorResult {xorNum=1};
+				xorResult := xor2Bytes(byte(n), char)
+				byteHolder = append(byteHolder,xorResult)
 
-					xorByte += uint8(xorNum * (math.Pow(2, float64(j))))
-				}
-				byteHolder = append(byteHolder,xorByte)
-				xorByte = 0
 				score := scoreText(byteHolder)
 				if score > maxScore {
 					maxScore = score
-					texto = string(byteHolder)
+					textoEncontrado = string(byteHolder)
 					key = byte(n)
 				}
 			}
-
 			byteHolder = []uint8{}
-			xorByte = 0
 		}
-		count++
-		chaveString := string(key)
-		countString := strconv.Itoa(count)
-		strings.ToLower(texto)
-		words := strings.Fields(texto)
 
-		//Se o texto tiver alguma palavra muito comum, escrever eles nas possiveis. Dado a possibilidade
-		//de que o texto pode não conter nenhuma delas, elas ainda são gravadas em Geral
+		countLinhas++
+		countLinhasAsString := strconv.Itoa(countLinhas)
+		strings.ToLower(textoEncontrado)
+		words := strings.Fields(textoEncontrado)
+
 		for _, palavra := range words {
-			if contains(commonWords, string(palavra)) {
-				filePossiveis.WriteString("Linha:" + countString + " Chave:" + chaveString + " " + texto + "\n")
+			palavrasEncontradas := contains(string(palavra))
+			if palavrasEncontradas > 0{
+				filePossiveisResultados.WriteString("Linha:" + countLinhasAsString +
+				 " Chave:" + string(key) + " Texto:" + textoEncontrado + "\n")
 			}
 		}
-
-
-		fileEscrever.WriteString("Linha:" + countString + " Chave:" + chaveString + " " + texto + "\n")		
-
+		fileDecriptacao.WriteString("Linha:" + countLinhasAsString + " Chave:" + string(key) + ": " + textoEncontrado + "\n")		
 		if err := scanner.Err(); err != nil{log.Fatal(err)}
 	}
 }
 
+//Recebe 2 bytes e realiza uma operação xor entre eles
+func xor2Bytes(b1 byte, b2 byte) uint8{
+	var xorByte uint8 = 0
+	for j := 7; j >= 0 ; j--{
+		bit1 := (b1 >> uint(j)) & 1
+		bit2 := (b2 >> uint(j)) & 1
+		xorResult := (bit1 != bit2)
+		var xorNum float64; if xorResult {xorNum=1};
+		xorByte += uint8(xorNum * (math.Pow(2, float64(j))))
+	}
+	return xorByte
+}
 
+//Os valores do mapa de frequẽncia foram copiados da wikipedia
+//O objetivo do scoreText aqui é evitar que eu precise ler todos os resultados
 func scoreText(text []byte) float64 {
-    
     freqMap := map[byte]float64{
         'a': 0.082, 'b': 0.015, 'c': 0.028, 'd': 0.043, 'e': 0.127,
         'f': 0.022, 'g': 0.020, 'h': 0.061, 'i': 0.07, 'j': 0.0015,
@@ -105,7 +103,6 @@ func scoreText(text []byte) float64 {
         'u': 0.028, 'v': 0.0098, 'w': 0.024, 'x': 0.00150, 'y': 0.02,
         'z': 0.00074, ' ': 0.13000, // Espaço foi considerado também
     }
-
     score := 0.0
     for _, char := range text {
         score += freqMap[char]
@@ -113,12 +110,14 @@ func scoreText(text []byte) float64 {
     return score
 }
 
-//Busca uma palavra chave em um slice de strings
-func contains(palavrasChave []string, palavra string) bool {
-	for _, item := range palavrasChave {
+//Busca uma palavra chave em uma série de palavras comuns pré determinadas
+func contains(palavra string) uint {
+	commonWords := []string{"the", "and", "is", "in", "it", "to"}
+	var palavrasEncontradas uint = 0 
+	for _, item := range commonWords {
 		if item == palavra {
-			return true
+			palavrasEncontradas++
 		}
 	}
-	return false
+	return palavrasEncontradas
 }
