@@ -3,7 +3,7 @@ package main
 //Similar ao exercicio 3, aqui pensei em aplicar um filtro sobre filtro. Basicamente 
 //para cada linha seleciono a iteração com a chave mais frequente. Tenho então uma série de linhas
 //Dessa serie de linha busco por palavras chaves comuns, e adiciono as linhas encontradas
-//Ao arquivo "possiveis"
+//Ao arquivo "possiveisResultados"
 
 import(
 	"os"
@@ -67,6 +67,8 @@ func main(){
 		strings.ToLower(textoEncontrado)
 		words := strings.Fields(textoEncontrado)
 
+		//Verificar se o texto da iteração contém uma palavra chave em ingles (sendo um bom indicativo de que a linha
+		//decriptografada está em ingles, mas sujeito a ruídos)
 		for _, palavra := range words {
 			palavrasEncontradas := contains(string(palavra))
 			if palavrasEncontradas > 0{
