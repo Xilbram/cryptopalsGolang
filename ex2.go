@@ -1,17 +1,18 @@
 package main
 
+//Consiste em iterar a string (já que são de mesmo tamanho), e realizar xor em seus bytes
 import(
 	"fmt"
-	"encoding/hex"
+	"cryptopals/utils"
 	"math"
-	"strings"
 )
 
 func main(){
+	alvo := "746865206b696420646f6e277420706c6179"
 	string1 := "1c0111001f010100061a024b53535009181c"
 	string2 := "686974207468652062756c6c277320657965"
-	hex1 := stringToHex(string1)
-	hex2 := stringToHex(string2)
+	hex1 := utils.StringToHex(string1)
+	hex2 := utils.StringToHex(string2)
 	
 	var xorByte uint8
 	ByteHolder := []uint8{}
@@ -21,7 +22,6 @@ func main(){
 			bit1 := (b >> uint(j)) & 1
 			bit2 := (hex2[i] >> uint(j)) & 1
 
-			//Resultado da operação de xor é um bool, portanto deve ser convertido. O uso float64 é devido ao requisito de math.pow
 			xorBool := (bit1 != bit2)
 			var xorInt float64
 			if xorBool {
@@ -36,36 +36,13 @@ func main(){
 		xorByte = 0
 	}
 
-	output := stringSliceToString(byteToHexString(ByteHolder))
-	fmt.Printf(output)
-}
+	output := utils.StringSliceToString(utils.ByteToHexString(ByteHolder))
+	fmt.Printf(output + "\n")
 
-
-//Transforma uma string em cadeia hexadecimal
-func stringToHex(s string) []byte {
-    decodedHex, err := hex.DecodeString(s)
-    if err != nil {
-        fmt.Println("Error:", err)
-    }
-
-    return decodedHex
-}
-
-//Transforma um slice de bytes em uma cadeia Hexadecimal
-func byteToHexString(byteSlice []byte) []string{
-	hexSlice := make([]string, len(byteSlice))
-    for i, b := range byteSlice {
-        hexSlice[i] = strings.ToLower(fmt.Sprintf("%02X", b))
-    }
-
-	return hexSlice
-}
-
-//Transforma um slice de strings em uma unica string
-func stringSliceToString(s []string) string{
-	res := ""
-	for _, item := range s{
-		res += item
+	equal,pos := utils.AreEqual(output, alvo)
+    if equal {
+		fmt.Println("Iguais")
+	} else {
+		fmt.Printf("Diferentes em index %d e bytes \n", pos)
 	}
-	return res
-} 
+}

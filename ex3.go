@@ -4,7 +4,6 @@ package main
 //na wikipedia, tive algumas ideas melhores, e cheguei em uma solução que facilitou o problema.
 //Ela consiste em utilizar uma função que mapeia um score da mensagem de acordo com o caractere mais frequente
 //Assim, o resultado retornado acabou sendo a mensagem decriptada, já que teve o melhor score.
-
 import (
 	"cryptopals/utils"
 	"fmt"
