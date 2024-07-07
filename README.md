@@ -1,0 +1,1 @@
+These are some implementations in go for the cryptopals challenge, which consists of security tests and some codification formats. It's a very interesting challenge, and it goes into details of some operations.
